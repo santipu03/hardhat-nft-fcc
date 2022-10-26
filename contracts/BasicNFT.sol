@@ -10,7 +10,7 @@ contract BasicNft is ERC721 {
 
     uint256 private s_tokenCounter;
 
-    constructor() ERC721("racksDog", "DOG") {
+    constructor() ERC721("RacksDog", "DOG") {
         s_tokenCounter = 0;
     }
 
@@ -20,9 +20,7 @@ contract BasicNft is ERC721 {
         return s_tokenCounter;
     }
 
-    function tokenURI(
-        uint256 /*tokenId*/
-    ) public view override returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         return TOKEN_URI;
     }
 
