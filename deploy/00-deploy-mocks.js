@@ -14,10 +14,9 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         await deploy("VRFCoordinatorV2Mock", {
             from: deployer,
             log: true,
-            args: [args],
+            args: args,
         })
         log("Mocks deployed!")
-        log("-----------------------------")
     }
 }
 
