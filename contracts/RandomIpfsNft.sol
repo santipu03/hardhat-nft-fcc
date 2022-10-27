@@ -12,7 +12,7 @@ error RandomIpfsNft__NeedMoreETHSent();
 error RandomIpfsNft__TransferFailed();
 
 contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
-    // Type Declaration
+    // Types
     enum Breed {
         PUG,
         SHIBA_INU,
@@ -27,14 +27,14 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUM_WORDS = 1;
 
-    // VRF Helpers
-    mapping(uint256 => address) public s_requestIdToSender;
-
     // NFT Variables
     uint256 public s_tokenCounter;
     uint256 internal constant MAX_CHANCE_VALUE = 100;
     string[3] internal s_dogTokenUris;
     uint256 internal i_mintFee;
+
+    // VRF Helpers
+    mapping(uint256 => address) public s_requestIdToSender;
 
     // Events
     event NftRequested(uint256 indexed requestId, address requester);
@@ -43,7 +43,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     constructor(
         address vrfCoordinatorV2,
         uint64 subscriptionId,
-        bytes32 gasLane,
+        bytes32 gasLane, // keyHash
         uint32 callbackGasLimit,
         string[3] memory dogTokenUris,
         uint256 mintFee
@@ -55,6 +55,11 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
         s_dogTokenUris = dogTokenUris;
         i_mintFee = mintFee;
     }
+
+    /**
+     * @dev The minter calls this function to request an NFT
+     *      Then it calls the VRF Coordinator with the requisited, and we call the event
+     */
 
     function requestNft() public payable returns (uint256 requestId) {
         if (msg.value < i_mintFee) {
@@ -70,6 +75,13 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
         s_requestIdToSender[requestId] = msg.sender;
         emit NftRequested(requestId, msg.sender);
     }
+
+    /**
+     * @dev The VRF Coordinator calls this function and pass the random number as a param
+     *      With the number, we get a 0-99 range
+     *      Then based on the number it selects a Breed (PUG, Shiba, Bernard)
+     *      It calls then the safeMint function, sets the URI and emit the event
+     */
 
     function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
         address dogOwner = s_requestIdToSender[requestId];
@@ -91,6 +103,13 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
             revert RandomIpfsNft__TransferFailed();
         }
     }
+
+    // View / Pure Functions
+
+    /**
+     * @dev helper function to get a Breed based on the number we got (0-99)
+     *      In a rare case something happens, we call the error RangoOutOfBounds
+     */
 
     function getBreedFromModdedeRng(uint256 moddedRng) public pure returns (Breed) {
         uint256 cumulativeSum = 0;
