@@ -1,6 +1,7 @@
 const { network, ethers } = require("hardhat")
 const { developmentChains, networkConfig } = require("../helper-hardhat-config")
 const { storeImages, storeTokenUriMetadata } = require("../utils/uploadToPinata")
+const { verify } = require("../utils/verify")
 
 const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("5")
 const imagesLocation = "./images/randomNft"
@@ -19,7 +20,12 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
 
-    let tokenUris
+    let tokenUris = [
+        "ipfs://QmQZk3tPUy2PhoQriP5HmLH7pZH2BYSRuE5vLiRLH76H3N",
+        "ipfs://Qmenqo7T7gbAaMSMHNXsKgFYzYSjTtBdRf4fAiCXHEQKVm",
+        "ipfs://QmQQzC4Nm8x6WhU1ARQo2PRugU9VnqByn1GmUgswisVnAy",
+    ]
+
     // Get the IPFS hashes of our images
     if (process.env.UPLOAD_TO_PINATA == "true") {
         tokenUris = await handleTokenuris()
@@ -56,9 +62,21 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         subscriptionId,
         gasLane,
         callbackGasLimit,
-        dogTokenUris,
+        tokenUris,
         mintFee,
     ]
+
+    const randomIpfsNft = await deploy("RandomIpfsNft", {
+        from: deployer,
+        args: args,
+        log: true,
+        waitConfirmations: network.config.blockConfirmations || 1,
+    })
+    log("-----------------------------")
+
+    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
+        await verify(randomIpfsNft.address, args)
+    }
 }
 
 // Upload out code to Pinata
