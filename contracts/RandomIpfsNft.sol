@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.8;
 
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
@@ -90,7 +89,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
         // 0-10 --> PUG
         // 10-30 --> Shiba Inu
         // 30-99 --> St. Bernard
-        Breed dogBreed = getBreedFromModdedeRng(moddeedRng);
+        Breed dogBreed = getBreedFromModdedRng(moddeedRng);
         s_tokenCounter = s_tokenCounter + 1;
         _safeMint(dogOwner, newTokenId);
         _setTokenURI(newTokenId, s_dogTokenUris[uint256(dogBreed)]);
@@ -112,7 +111,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
      *      In a rare case something happens, we call the error RangoOutOfBounds
      */
 
-    function getBreedFromModdedeRng(uint256 moddedRng) public pure returns (Breed) {
+    function getBreedFromModdedRng(uint256 moddedRng) public pure returns (Breed) {
         uint256 cumulativeSum = 0;
         uint256[3] memory chanceArray = getChanceArray();
         for (uint256 i = 0; i < chanceArray.length; i++) {
