@@ -81,4 +81,43 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                   })
               })
           })
+
+          describe("getBreedFromModdedRng", () => {
+              it("should revert if moddedRng is > 99", async () => {
+                  await expect(randomIpfsNft.getBreedFromModdedRng("100")).to.be.revertedWith(
+                      "RandomIpfsNft__RangeOutOfBounds"
+                  )
+              })
+              it("should return PUG if moddedRng is between 0 - 9", async () => {
+                  // We test with 3 values to assure everything is in order
+                  const breed = await randomIpfsNft.getBreedFromModdedRng("0")
+                  const breed1 = await randomIpfsNft.getBreedFromModdedRng("5")
+                  const breed2 = await randomIpfsNft.getBreedFromModdedRng("9")
+
+                  // Should return 0, because the enum Breed(0) == PUG
+                  assert.equal(breed, 0)
+                  assert.equal(breed1, 0)
+                  assert.equal(breed2, 0)
+              })
+              it("should return SHIBA_INU if moddedRng is between 10 - 39", async () => {
+                  const breed = await randomIpfsNft.getBreedFromModdedRng("10")
+                  const breed1 = await randomIpfsNft.getBreedFromModdedRng("25")
+                  const breed2 = await randomIpfsNft.getBreedFromModdedRng("39")
+
+                  // enum Breed(1) == SHIBA_INU
+                  assert.equal(breed, 1)
+                  assert.equal(breed1, 1)
+                  assert.equal(breed2, 1)
+              })
+              it("should return ST_BERNARD if moddedRng is between 40 - 99", async () => {
+                  const breed = await randomIpfsNft.getBreedFromModdedRng("40")
+                  const breed1 = await randomIpfsNft.getBreedFromModdedRng("85")
+                  const breed2 = await randomIpfsNft.getBreedFromModdedRng("99")
+
+                  // enum Breed(2) == ST_BERNARD
+                  assert.equal(breed, 2)
+                  assert.equal(breed1, 2)
+                  assert.equal(breed2, 2)
+              })
+          })
       })
