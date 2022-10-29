@@ -3,6 +3,8 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
 const { storeImages, storeTokenUriMetadata } = require("../utils/uploadToPinata")
 const { verify } = require("../utils/verify")
 
+// deployed contract in Goerli: 0xE903Eadbc575a5e17659b01E7d904906287346fC
+
 const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("5") // 5 LINK
 const imagesLocation = "./images/randomNft"
 const metadataTemplate = {
