@@ -3,28 +3,27 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
 const { storeImages, storeTokenUriMetadata } = require("../utils/uploadToPinata")
 const { verify } = require("../utils/verify")
 
-const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("5")
+const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("5") // 5 LINK
 const imagesLocation = "./images/randomNft"
 const metadataTemplate = {
     name: "",
     description: "",
     image: "",
     attributes: {
-        trait_type: "",
-        value: "",
+        trait_type: "Cuteness",
+        value: "100",
     },
 }
+let tokenUris = [
+    "ipfs://QmQZk3tPUy2PhoQriP5HmLH7pZH2BYSRuE5vLiRLH76H3N",
+    "ipfs://Qmenqo7T7gbAaMSMHNXsKgFYzYSjTtBdRf4fAiCXHEQKVm",
+    "ipfs://QmQQzC4Nm8x6WhU1ARQo2PRugU9VnqByn1GmUgswisVnAy",
+]
 
 module.exports = async function ({ getNamedAccounts, deployments }) {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
-
-    let tokenUris = [
-        "ipfs://QmQZk3tPUy2PhoQriP5HmLH7pZH2BYSRuE5vLiRLH76H3N",
-        "ipfs://Qmenqo7T7gbAaMSMHNXsKgFYzYSjTtBdRf4fAiCXHEQKVm",
-        "ipfs://QmQQzC4Nm8x6WhU1ARQo2PRugU9VnqByn1GmUgswisVnAy",
-    ]
 
     // Get the IPFS hashes of our images
     if (process.env.UPLOAD_TO_PINATA == "true") {
@@ -73,6 +72,14 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         waitConfirmations: network.config.blockConfirmations || 1,
     })
     log("-----------------------------")
+
+    // If we are in hardhat network, add ourselves as consumers to perform tests
+    if (chainId == 31337) {
+        const vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
+        await vrfCoordinatorV2Mock.addConsumer(subscriptionId.toNumber(), randomIpfsNft.address)
+        log("adding consumer...")
+        log("Consumer added!")
+    }
 
     if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
         await verify(randomIpfsNft.address, args)
