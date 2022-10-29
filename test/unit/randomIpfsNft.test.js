@@ -47,4 +47,38 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                   )
               })
           })
+
+          describe("fulfillRandomWords", () => {
+              it("mints NFT after random number is returned", async () => {
+                  // Here we have to wait the VRF Coordinator to call fulfillRandomWords and then test the function
+                  // So we'll wait for the NftMinted event to test
+                  await new Promise(async (resolve, reject) => {
+                      randomIpfsNft.once("NftMinted", async () => {
+                          try {
+                              const tokenCounter = await randomIpfsNft.getTokenCounter()
+                              const tokenUri = await randomIpfsNft.tokenURI("0")
+                              assert.equal(tokenCounter.toString(), "1")
+                              assert(tokenUri.toString().includes("ipfs://"))
+
+                              resolve()
+                          } catch (e) {
+                              console.log(e)
+                              reject(e)
+                          }
+                      })
+                      try {
+                          const tx = await randomIpfsNft.requestNft({ value: mintFee })
+                          const txReceipt = await tx.wait(1)
+                          const requestId = txReceipt.events[1].args.requestId
+                          await vrfCoordinatorV2Mock.fulfillRandomWords(
+                              requestId,
+                              randomIpfsNft.address
+                          )
+                      } catch (e) {
+                          console.log(e)
+                          reject(e)
+                      }
+                  })
+              })
+          })
       })
