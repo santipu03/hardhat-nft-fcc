@@ -68,8 +68,8 @@ contract DynamicSvgNft is ERC721 {
                             abi.encodePacked(
                                 '{"name":"',
                                 name(),
-                                '", "description": "An Nft that changes based on the Chainlink Feed",',
-                                '"attributes":[{"trait_type": "coolness","value": 100}], "image":"',
+                                '", "description":"An NFT that changes based on the Chainlink Feed", ',
+                                '"attributes": [{"trait_type": "coolness", "value": 100}], "image":"',
                                 imageURI,
                                 '"}'
                             )
