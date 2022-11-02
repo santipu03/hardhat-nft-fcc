@@ -9,7 +9,8 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
           const chainId = network.config.chainId
 
           beforeEach(async () => {
-              deployer = (await getNamedAccounts()).deployer
+              const accounts = await ethers.getSigners()
+              deployer = accounts[0]
               await deployments.fixture(["mocks", "randomipfs"])
               randomIpfsNft = await ethers.getContract("RandomIpfsNft", deployer)
               vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock", deployer)
@@ -82,6 +83,30 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
               })
           })
 
+          describe("withdraw", () => {
+              it("should transfer the correct amount to the owner", async () => {
+                  const deployerStartingBalance = await deployer.getBalance()
+                  const player = (await getNamedAccounts()).player
+                  const connectedContract = await ethers.getContract("RandomIpfsNft", player)
+                  // get another player to request an NFT and pay the mintFee
+                  const tx = await connectedContract.requestNft({ value: mintFee })
+                  await tx.wait(1)
+                  // the deployer then withdraw the funds
+                  const tx2 = await randomIpfsNft.withdraw()
+                  const txReceipt = await tx2.wait(1)
+                  const { gasUsed, effectiveGasPrice } = txReceipt
+                  const deployerEndingBalance = await deployer.getBalance()
+                  // We have to substract the gasUsed * gasPrice from that tx to compare
+                  assert.equal(
+                      deployerEndingBalance.toString(),
+                      deployerStartingBalance
+                          .sub(gasUsed.mul(effectiveGasPrice))
+                          .add(mintFee)
+                          .toString()
+                  )
+              })
+          })
+
           describe("getBreedFromModdedRng", () => {
               it("should revert if moddedRng is > 99", async () => {
                   await expect(randomIpfsNft.getBreedFromModdedRng("100")).to.be.revertedWith(
@@ -118,6 +143,15 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                   assert.equal(breed, 2)
                   assert.equal(breed1, 2)
                   assert.equal(breed2, 2)
+              })
+          })
+
+          describe("getDogTokenUris", () => {
+              it("should return the adequate tokenUri", async () => {
+                  const fee = await randomIpfsNft.getMintFee()
+                  await randomIpfsNft.requestNft({ value: fee.toString() })
+                  const tokenUri = await randomIpfsNft.getDogTokenUris(0)
+                  assert(tokenUri.toString().includes("ipfs://"))
               })
           })
       })
